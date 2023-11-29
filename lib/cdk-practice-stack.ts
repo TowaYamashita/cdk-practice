@@ -6,8 +6,7 @@ import {
   InstanceType,
   InstanceClass,
   InstanceSize,
-  AmazonLinuxImage,
-  AmazonLinuxGeneration } from 'aws-cdk-lib/aws-ec2';
+  MachineImage} from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
 
@@ -31,7 +30,9 @@ export class CdkPracticeStack extends Stack {
     const instance = new Instance(this, 'Instance', {
       vpc: vpc,
       instanceType: InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO,),
-      machineImage: new AmazonLinuxImage({ generation: AmazonLinuxGeneration.AMAZON_LINUX_2 }),
+      machineImage: MachineImage.genericLinux({
+        'us-east-1': 'ami-0230bd60aa48260c6',
+      })
     });
 
     // EventBridge Scheduler
