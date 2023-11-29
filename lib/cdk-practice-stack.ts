@@ -7,6 +7,9 @@ import {
   InstanceClass,
   InstanceSize,
   MachineImage,
+  SecurityGroup,
+  Peer,
+  Port,
 } from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
@@ -27,6 +30,17 @@ export class CdkPracticeStack extends Stack {
       publicSubnetIds: ['subnet-087b2ffed59433e41'],
       publicSubnetRouteTableIds: ['rtb-03f24092df045b118'],
     });
+
+    // セキュリティグループ
+    const securityGroup = new SecurityGroup(this, 'SecurityGroup', {
+      vpc: vpc,
+      allowAllOutbound: true,
+    });
+    securityGroup.addIngressRule(
+      Peer.anyIpv4(), 
+      Port.icmpPing(),
+      'allow ping from anywhere'
+    );
 
     // インスタンスプロファイル
     const ec2Role = new Role(this, 'Ec2InstanceRole', {
@@ -51,6 +65,7 @@ export class CdkPracticeStack extends Stack {
       }),
       role: ec2Role,
       ssmSessionPermissions: true,
+      securityGroup: securityGroup,
     });
 
     // EventBridge Scheduler
