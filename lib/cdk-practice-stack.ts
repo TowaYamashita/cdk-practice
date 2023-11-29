@@ -6,9 +6,11 @@ import {
   InstanceType,
   InstanceClass,
   InstanceSize,
-  MachineImage} from 'aws-cdk-lib/aws-ec2';
+  MachineImage,
+} from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class CdkPracticeStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -26,13 +28,29 @@ export class CdkPracticeStack extends Stack {
       publicSubnetRouteTableIds: ['rtb-03f24092df045b118'],
     });
 
+    // インスタンスプロファイル
+    const ec2Role = new Role(this, 'Ec2InstanceRole', {
+      assumedBy: new ServicePrincipal('ec2.amazonaws.com'),
+    });
+    ec2Role.addToPolicy(new PolicyStatement({
+      resources: [
+        `arn:aws:ssm:${props!.env!.region}:${props!.env!.account}:parameter/*`,
+      ],
+      effect: Effect.ALLOW,
+      actions: [
+        'ssm:GetParameters',
+      ]
+    }));
+
     // EC2インスタンス
     const instance = new Instance(this, 'Instance', {
       vpc: vpc,
       instanceType: InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO,),
       machineImage: MachineImage.genericLinux({
         'us-east-1': 'ami-0230bd60aa48260c6',
-      })
+      }),
+      role: ec2Role,
+      ssmSessionPermissions: true,
     });
 
     // EventBridge Scheduler
