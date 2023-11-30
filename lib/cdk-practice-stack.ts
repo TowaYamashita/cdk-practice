@@ -11,8 +11,6 @@ import {
   Peer,
   Port,
   UserData,
-  MultipartUserData,
-  MultipartBody,
 } from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
@@ -64,7 +62,7 @@ export class CdkPracticeStack extends Stack {
     const userData = UserData.forLinux();
     const userDataScript = readFileSync('src/user-data.sh', 'utf-8').toString();
     userData.addCommands(userDataScript);
-    
+
     // EC2インスタンス
     const instance = new Instance(this, 'Instance', {
       vpc: vpc,
