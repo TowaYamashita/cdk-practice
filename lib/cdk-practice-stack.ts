@@ -10,10 +10,14 @@ import {
   SecurityGroup,
   Peer,
   Port,
+  UserData,
+  MultipartUserData,
+  MultipartBody,
 } from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { readFileSync } from 'fs';
 
 export class CdkPracticeStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -56,6 +60,11 @@ export class CdkPracticeStack extends Stack {
       ]
     }));
 
+    // ユーザデータ
+    const userData = UserData.forLinux();
+    const userDataScript = readFileSync('src/user-data.sh', 'utf-8').toString();
+    userData.addCommands(userDataScript);
+    
     // EC2インスタンス
     const instance = new Instance(this, 'Instance', {
       vpc: vpc,
@@ -66,6 +75,7 @@ export class CdkPracticeStack extends Stack {
       role: ec2Role,
       ssmSessionPermissions: true,
       securityGroup: securityGroup,
+      userData: userData,
     });
 
     // EventBridge Scheduler
