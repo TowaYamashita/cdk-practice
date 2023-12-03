@@ -60,7 +60,7 @@ export class CdkPracticeStack extends Stack {
 
     // ユーザデータ
     const userData = UserData.forLinux();
-    const userDataScript = readFileSync('src/user-data.sh', 'utf-8').toString();
+    const userDataScript = readFileSync('assets/ec2/user-data.sh', 'utf-8').toString();
     userData.addCommands(userDataScript);
 
     // EC2インスタンス
