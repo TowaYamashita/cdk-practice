@@ -10,14 +10,17 @@ import {
 import { type Instance } from "aws-cdk-lib/aws-ec2";
 
 interface SchedulerProps {
-  schedulerGroup: CfnScheduleGroup,
-  ec2Instance: Instance,
   region: string,
   accountId: string,
+  schedulerGroup: CfnScheduleGroup,
+  ec2Instance: Instance,
+  startInstanceSchedule: string,
+  stopInstanceSchedule: string,
+  scheduleTimeZone: string,
 }
 
 export class SchedulerStack extends Construct {
-  constructor(scope: Construct, id: string, {schedulerGroup, ec2Instance, region, accountId}: SchedulerProps){
+  constructor(scope: Construct, id: string, props: SchedulerProps){
     super(scope, id);
 
     const schedulerRole = new Role(this, 'SchedulerRole', {
@@ -32,37 +35,37 @@ export class SchedulerStack extends Construct {
           effect: Effect.ALLOW,
           actions: ['ec2:startInstances', 'ec2:stopInstances'],
           resources: [
-            `arn:aws:ec2:${region}:${accountId}:instance/${ec2Instance.instance.ref}`,
+            `arn:aws:ec2:${props.region}:${props.accountId}:instance/${props.ec2Instance.instance.ref}`,
           ],
         }),
       ]
     });
 
     new CfnSchedule(this, 'Ec2Start', {
-      groupName: schedulerGroup.name,
+      groupName: props.schedulerGroup.name,
       flexibleTimeWindow: {
         mode: 'OFF',
       },
-      scheduleExpressionTimezone: 'Asia/Tokyo',
-      scheduleExpression: 'cron(00 09 ? * MON-FRI *)',
+      scheduleExpressionTimezone: props.scheduleTimeZone,
+      scheduleExpression: props.startInstanceSchedule,
       target: {
         arn: 'arn:aws:scheduler:::aws-sdk:ec2:startInstances',
         roleArn: schedulerRole.roleArn,
-        input: JSON.stringify({InstanceIds: [ec2Instance.instanceId]}),
+        input: JSON.stringify({InstanceIds: [props.ec2Instance.instanceId]}),
       },
     });
 
     new CfnSchedule(this, 'Ec2Stop', {
-      groupName: schedulerGroup.name,
+      groupName: props.schedulerGroup.name,
       flexibleTimeWindow: {
         mode: 'OFF',
       },
-      scheduleExpressionTimezone: 'Asia/Tokyo',
-      scheduleExpression: 'cron(00 18 ? * MON-FRI *)',
+      scheduleExpressionTimezone: props.scheduleTimeZone,
+      scheduleExpression: props.stopInstanceSchedule,
       target: {
         arn: 'arn:aws:scheduler:::aws-sdk:ec2:stopInstances',
         roleArn: schedulerRole.roleArn,
-        input: JSON.stringify({ InstanceIds: [ec2Instance.instanceId]}),
+        input: JSON.stringify({ InstanceIds: [props.ec2Instance.instanceId]}),
       },
     });
   }

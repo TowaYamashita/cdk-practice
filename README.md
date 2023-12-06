@@ -23,13 +23,25 @@ v20.9.0
 
 ```shell
 npm install
-npm run cdk bootstrap
-npm run cdk deploy
+
+# 開発環境
+npm run cdk bootstrap -- -c stage=dev
+npm run cdk deploy -- -c stage=dev
+
+# 本番環境
+npm run cdk bootstrap -- -c stage=prd
+npm run cdk deploy -- -c stage=prd
 ```
 
+> 本番環境へデプロイする場合は、適当な値を `cdk.json` の prd に記入してください
+
 4. 下記コマンドを実行して、アプリケーションスタックを削除する
-```
-npm run cdk destroy
+```shell
+# 開発環境
+npm run cdk destroy -- -c stage=dev
+
+# 本番環境
+npm run cdk destroy -- -c stage=prd
 ```
 
 > npm run cdk bootstrap 実行時に作成されたブートストラップスタックは AWS CloudFormation コンソールから手動で削除する

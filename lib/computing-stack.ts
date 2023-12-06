@@ -7,6 +7,7 @@ interface ComputingProps{
   region: string,
   accountId: string,
   vpc: IVpc,
+  ami: string,
 }
 
 export class ComputingStack extends Construct{
@@ -46,11 +47,12 @@ export class ComputingStack extends Construct{
     userData.addCommands(userDataScript);
 
     // EC2インスタンス
+    const ami = props.ami;
     const instance = new Instance(this, 'Instance', {
       vpc: props.vpc,
       instanceType: InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO,),
       machineImage: MachineImage.genericLinux({
-        'us-east-1': 'ami-0230bd60aa48260c6',
+        'us-east-1': ami,
       }),
       role: ec2Role,
       ssmSessionPermissions: true,
