@@ -2,9 +2,6 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   Vpc,
-  SecurityGroup,
-  Peer,
-  Port,
 } from 'aws-cdk-lib/aws-ec2';
 import { SchedulerStack } from './scheduler-stack';
 import { CfnScheduleGroup } from 'aws-cdk-lib/aws-scheduler';
@@ -26,23 +23,11 @@ export class CdkPracticeStack extends Stack {
       publicSubnetRouteTableIds: ['rtb-03f24092df045b118'],
     });
 
-    // セキュリティグループ
-    const securityGroup = new SecurityGroup(this, 'SecurityGroup', {
-      vpc: vpc,
-      allowAllOutbound: true,
-    });
-    securityGroup.addIngressRule(
-      Peer.anyIpv4(), 
-      Port.icmpPing(),
-      'allow ping from anywhere'
-    );
-
+    // 定期的な処理を実行するEC2インスタンス
     const computing = new ComputingStack(this, 'ComputingStack', {
       region: props.env.region!,
       accountId: props.env.account!,
       vpc: vpc,
-      securityGroup: securityGroup,
-
     });
 
     // EventBridge Scheduler

@@ -1,4 +1,4 @@
-import { IVpc, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, SecurityGroup, UserData } from "aws-cdk-lib/aws-ec2";
+import { IVpc, Instance, InstanceClass, InstanceSize, InstanceType, MachineImage, Peer, Port, SecurityGroup, UserData } from "aws-cdk-lib/aws-ec2";
 import { Effect, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { readFileSync } from "fs";
@@ -7,7 +7,6 @@ interface ComputingProps{
   region: string,
   accountId: string,
   vpc: IVpc,
-  securityGroup: SecurityGroup,
 }
 
 export class ComputingStack extends Construct{
@@ -15,6 +14,17 @@ export class ComputingStack extends Construct{
 
   constructor(scope: Construct, id: string, props: ComputingProps) {
     super(scope, id);
+
+    // セキュリティグループ
+    const securityGroup = new SecurityGroup(this, 'SecurityGroup', {
+      vpc: props.vpc,
+      allowAllOutbound: true,
+    });
+    securityGroup.addIngressRule(
+      Peer.anyIpv4(), 
+      Port.icmpPing(),
+      'allow ping from anywhere'
+    );
 
     // インスタンスプロファイル
     const ec2Role = new Role(this, 'Ec2InstanceRole', {
@@ -44,7 +54,7 @@ export class ComputingStack extends Construct{
       }),
       role: ec2Role,
       ssmSessionPermissions: true,
-      securityGroup: props.securityGroup,
+      securityGroup: securityGroup,
       userData: userData,
     });
 
